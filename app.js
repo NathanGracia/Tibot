@@ -14,11 +14,37 @@ var options = {
     },
     channels: ["tiboy590"]
 };
-var client = new tmi.client(options);
-client.connect();
 var lotoStarted = false;
+var client = new tmi.client(options);
+var mysql = require('mysql');
+var channel = "tiboy590";
+var bdd = mysql.createConnection({
+    host: "sql7.freesqldatabase.com",
+    user: "sql7295933",
+    password: "KF8ar4qB3S",
+    database: "sql7295933"
+});
+
+bdd.connect(function(mysqlError) {
+    if (mysqlError) throw mysqlError;
+    console.log("Connecté à la BDD !")
+    
+
+});
+client.connect();
 client.on('chat', function(channel, user, message, self){
-var words = message.split(' ');
+//Ajoute des golds
+if(self == false){
+    //verifie si l'utilisateur existe, si non en créé un
+    if(checkUserExist(user) == false){
+        
+    }else{
+        
+    //ajoute des golds à l'utilisateur en bdd
+    addGold(user, 1);
+
+
+    var words = message.split(' ');
     switch(words[0]){
             case "!salut" :
             if(isBroadcaster(user)){
@@ -36,6 +62,12 @@ var words = message.split(' ');
             case "!fb" :
             client.say(channel, "Lien de ma page facebook : https://www.facebook.com/Tiboy59-1471643269754828/ '");
             break;
+            case "!podium" :
+            getPodium();
+            break;
+            case "!gold" :
+            getMyGold(user);
+            break;
             case "!discord" :
             client.say(channel, "Rejoignez la team Tiboy sur discord ! Giveway gratuis toute les semaines, concour et un max de conneries LUL https://discord.gg/w2yKvkn ");
             break;
@@ -47,6 +79,9 @@ var words = message.split(' ');
             break;
             case "!musique" :
             client.say(channel, "Vous pouvez proposez des musiques avec !sr <NomDeLaMusique> WAW C EST INSANE");
+            break;
+            case "!commandes" :
+            client.say(channel, "Le gdoc des commandes : https://docs.google.com/spreadsheets/d/1TRqgZuwRRTFEg046odDFFmfWT_f4vB3nw9P19-Gv0pw/edit?usp=sharing");
             break;
             case "!loto" :
             if(isModerator(user) || isBroadcaster(user) ){
@@ -85,10 +120,10 @@ var words = message.split(' ');
                 
            
 
-
+        }
     }
    
-
+}
 
 });
 client.on('connected', function(adress, port) {
@@ -96,6 +131,7 @@ client.on('connected', function(adress, port) {
     client.action("tiboy590", "Me voilà connecté au chat PogChamp !");
  
 });
+// LOTO ---------------------------------------------------------------------------------------------------------
 function isSubscriber(user){
     return user.subscriber;
 }
@@ -109,6 +145,7 @@ function isBroadcaster(user){
         return false;
     }
 }
+
 function startLoto(max){
     lotoStarted = true;
     win_number =  getRandomInt(max);
@@ -160,8 +197,83 @@ function startLoto(max){
 
 }
 
-
-
 function getRandomInt(max) {
     return Math.floor(Math.random() * Math.floor(max));
   }
+
+// BDD methods *-----*----------------------------------------------------------------------------------------------------------------------
+
+
+function getPodium() {
+    var query = "SELECT * FROM test ORDER BY gold DESC";
+
+    bdd.query(query, function (mysqlError, result, fields) {
+        if (mysqlError) throw mysqlError;
+        send_message = "";
+        for(var i= 0; i < result.length; i++)
+        {
+            send_message += " Numero : " + (i+1) + " : " + result[i].name + "(" + result[i].gold + " po )     ";
+        }
+        client.say(channel, send_message);
+    });
+  
+}
+
+function checkUserExist(user){
+    
+    var query = "SELECT * FROM test WHERE name = '"+ user['display-name'] +"'";
+    console.log('checkUserExist()')
+    bdd.query(query, function (mysqlError, result, fields) {
+        var exist= "banane";
+        if (mysqlError) throw mysqlError;
+        
+        if(result[0] == null){
+            console.log('Joueur pas trouvé')
+            exist = false;
+            newUser(user)
+        }else{
+            exist = true;
+        }
+        ;
+        return exist;
+    });
+  
+}
+
+function newUser(user) {
+    console.log('newUser();')
+    var query = "INSERT INTO test (name) VALUES ('"+ user['display-name']+"')";
+
+    bdd.query(query, function (mysqlError, result, fields) {
+        if (mysqlError) throw mysqlError;
+        console.log("Nouvel utilisateur enregistré ! : " + user['display-name'] );
+        console.log(result.affectedRows +" requete(s) lancées");
+
+    });
+}
+// GOLD methods --------------------------------------------------------------------------------------------------------------------------------------------------
+function addGold(user, gold_amount) {
+    console.log("addGold("+ user["display-name"]+"," + gold_amount +")");
+
+    var query = "UPDATE test SET gold = gold +"+gold_amount+" WHERE name = '"+ user["display-name"]+"'";
+    
+    bdd.query(query, function (mysqlError, result, fields) {
+        if (mysqlError) throw mysqlError;
+     
+            console.log("Ajout de golds : " + user['display-name'] +" obtiens " + gold_amount +" golds");
+            console.log(result.affectedRows +" requete(s) lancées");
+    });
+  
+}
+
+function getMyGold(user){
+    var query = "SELECT * FROM test WHERE name = '"+ user['display-name'] +"'";
+   
+    bdd.query(query, function (mysqlError, result, fields) {
+        if (mysqlError) throw mysqlError;
+        if(result[0]){
+        client.say(channel, "Messir " + user['display-name'] + ", vous avez " + result[0].gold + " pieces d'or ! BloodTrail " );
+        }
+    });
+}
+// Write logs ------------------------------------------------------------------------------------------------------------------------------------------------------------------
