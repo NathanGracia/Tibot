@@ -33,8 +33,10 @@ bdd.connect(function(mysqlError) {
 });
 client.connect();
 client.on('chat', function(channel, user, message, self){
+    logs("<"+ user["display-name"] + "> " + message, true)
 //Ajoute des golds
 if(self == false){
+    
     //verifie si l'utilisateur existe, si non en créé un
     if(checkUserExist(user) == false){
         
@@ -53,7 +55,7 @@ if(self == false){
             
             else{
                 if(isSubscriber(user)){
-                    client.say(channel, "Bonjour, messir  " + user['display-name']);
+                    client.say(channel, "Bonjour, messire  " + user['display-name']);
                     }
                 else{
                     client.say(channel, "Bonjour à toi " + user['display-name']);}
@@ -86,11 +88,21 @@ if(self == false){
             case "!loto" :
             if(isModerator(user) || isBroadcaster(user) ){
                 if(words[1] != null){
-                    client.say(channel, "On lance un loto ! Le nombre à trouver est entre 0 et " + words[1] + " !" );
-                    startLoto(parseInt(words[1]));
+                   var chat ="On lance un loto ! Le nombre à trouver est entre 0 et " + words[1] + " !";
+                   var gold = 0;
+                    if(words[2]  > 0){
+                        gold = words[2];
+                        console.log(words[2] + " ===" + gold)
+                        
+                        chat = chat + " Il y'a "+ words[2] + " golds en jeu !";
+                        
+                    }
+                startLoto(parseInt(words[1]),gold);
+                    client.say(channel, chat );
                 }
+                
                 else{
-                    client.say(channel, "Veuillez indiquer le nombre maximum avec !loto <max>" );
+                    client.say(channel, "Veuillez indiquer le nombre maximum et le nombre de gold (facultatif) avec !loto <max> <golds>" );
                 }
             }
             else{
@@ -146,40 +158,49 @@ function isBroadcaster(user){
     }
 }
 
-function startLoto(max){
+function startLoto(max, gold){
     lotoStarted = true;
     win_number =  getRandomInt(max);
     min = 0;
+    logs("Loto démaré avec max ="+max + " et win_number = "+ win_number)
     var reduce = setInterval(function(){
-        var med = ((max-min) /2)+min;
-        console.log("min : "+min)
-        console.log("med : "+med)
-        console.log("max : "+max)
-        console.log("nb : "+ win_number)
+        if(lotoStarted){
+        var med = Math.round(((max-min) /2)+min);
+        
         if(min <= win_number & win_number < med){
             max = med;
-            console.log("min  ")
+            
         }else{
             min = med;
-            console.log("max  ")
+            
         }
-        client.say("tiboy590", "Le chiffre à trouver est entre " + min + " et " + max);
-    }, 5000);
+        logs("Nouvelle fourchette : min ="+min + "  max =" + max)
+        client.say("tiboy590", "Le chiffre à trouver est entre " + min + " et " + max);}
+    }, 60000);
    
     var subOnly = true;
-    console.log(subOnly)
+    var ms = 60000;
     var subOnlyOFfTimer = setTimeout(function(){
+        if(lotoStarted){
         subOnly = false;
-        console.log(subOnly)
-    }, 10000);
+        logs(" Fin du sub only loto apres" + ms/1000 + "secondes")
+        client.say(channel, "PogChamp " +" Le loto est reservé aux sub durant les "+ ms/1000 +" premieres secondes!" );}
+    }, ms);
 
     client.on('chat', function(channel, user, message, self){
         if( subOnly != false & isSubscriber(user)== false & self == false & lotoStarted == true){
-            console.log(subOnly)
-            client.say(channel, "NotLikeThis " + user['display-name'] + " Le loto est reservé aux sub durant les 10 premieres secondes!" );
+            
+            client.say(channel, "NotLikeThis " + user['display-name'] + " Le loto est reservé aux sub durant les "+ ms/1000 +" premieres secondes!" );
         }else if(lotoStarted == true){
             if(parseInt(message) == win_number){
-                client.say(channel, "Jebaited " + user['display-name'] + " viens de gagner le Loto ! PogChamp " );
+                var chat = "Jebaited " + user['display-name'] + " viens de gagner le Loto ! PogChamp " ;
+                
+                if( gold > 0){
+                    console.log("golds : "+gold)
+                    chat = chat +"Il gagne donc les "+ gold + " pieces d'or !" ;
+                    addGold(user,gold);
+                }
+                client.say(channel, chat);
                 clearInterval(reduce);
                 lotoStarted = false;
                 return;
@@ -210,7 +231,7 @@ function getPodium() {
     bdd.query(query, function (mysqlError, result, fields) {
         if (mysqlError) throw mysqlError;
         send_message = "";
-        for(var i= 0; i < result.length; i++)
+        for(var i= 0; i < 3; i++)
         {
             send_message += " Numero : " + (i+1) + " : " + result[i].name + "(" + result[i].gold + " po )     ";
         }
@@ -222,13 +243,13 @@ function getPodium() {
 function checkUserExist(user){
     
     var query = "SELECT * FROM test WHERE name = '"+ user['display-name'] +"'";
-    console.log('checkUserExist()')
+   
     bdd.query(query, function (mysqlError, result, fields) {
         var exist= "banane";
         if (mysqlError) throw mysqlError;
         
         if(result[0] == null){
-            console.log('Joueur pas trouvé')
+            
             exist = false;
             newUser(user)
         }else{
@@ -241,34 +262,33 @@ function checkUserExist(user){
 }
 
 function newUser(user) {
-    console.log('newUser();')
+    
     var query = "INSERT INTO test (name) VALUES ('"+ user['display-name']+"')";
 
     bdd.query(query, function (mysqlError, result, fields) {
         if (mysqlError) throw mysqlError;
-        console.log("Nouvel utilisateur enregistré ! : " + user['display-name'] );
-        console.log(result.affectedRows +" requete(s) lancées");
+        logs("Nouvel utilisateur enregistré ! : " + user['display-name'], false );
+        logs(result.affectedRows +" requete(s) lancées", false);
 
     });
 }
 // GOLD methods --------------------------------------------------------------------------------------------------------------------------------------------------
 function addGold(user, gold_amount) {
-    console.log("addGold("+ user["display-name"]+"," + gold_amount +")");
-
+    //console.log("addGold("+ user["display-name"]+"," + gold_amount +")");
+   
     var query = "UPDATE test SET gold = gold +"+gold_amount+" WHERE name = '"+ user["display-name"]+"'";
-    
+    logs(query, false);
     bdd.query(query, function (mysqlError, result, fields) {
         if (mysqlError) throw mysqlError;
      
-            console.log("Ajout de golds : " + user['display-name'] +" obtiens " + gold_amount +" golds");
-            console.log(result.affectedRows +" requete(s) lancées");
+           
     });
   
 }
 
 function getMyGold(user){
     var query = "SELECT * FROM test WHERE name = '"+ user['display-name'] +"'";
-   
+    logs(query, false);
     bdd.query(query, function (mysqlError, result, fields) {
         if (mysqlError) throw mysqlError;
         if(result[0]){
@@ -276,4 +296,41 @@ function getMyGold(user){
         }
     });
 }
+
 // Write logs ------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+const fs = require('fs');
+var os = require("os");
+
+
+function logs(string, chat){
+    var now = new Date();
+    var annee   = now.getFullYear();
+    var mois    = now.getMonth() + 1;
+    if (mois < 10){
+        mois = "0" + mois;
+    }
+    var jour    = now.getDate();
+    var heure   = now.getHours();
+    if (heure < 10){
+        heure = "0" + heure;
+    }
+    var minute  = now.getMinutes();
+
+    if (minute < 10){
+        minute = "0" + minute;
+    }
+    var seconde = now.getSeconds();
+    if (seconde < 10){
+        seconde = "0" + seconde;
+    }
+    if(chat == false){
+        string ="###"+ string;
+    }
+    var text = "[" + +jour+"/"+mois+"/"+annee+"] [" + heure +":" + minute +"] "+string ;
+    fs.appendFile("logs.txt", text +os.EOL, function (err) {
+        if (err) throw err;
+        
+    })
+}
