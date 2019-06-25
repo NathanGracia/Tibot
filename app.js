@@ -24,7 +24,9 @@ var bdd = mysql.createConnection({
     password: "KF8ar4qB3S",
     database: "sql7295933"
 });
-
+//var x = setInterval(function(){
+//    client.say(channel, "Vous ");
+//}, 10000);
 bdd.connect(function(mysqlError) {
     if (mysqlError) throw mysqlError;
     console.log("Connecté à la BDD !")
@@ -85,6 +87,19 @@ if(self == false){
             case "!commandes" :
             client.say(channel, "Le gdoc des commandes : https://docs.google.com/spreadsheets/d/1TRqgZuwRRTFEg046odDFFmfWT_f4vB3nw9P19-Gv0pw/edit?usp=sharing");
             break;
+            case "!defi" :
+            showDefi();
+            break;
+            case "!donner" :
+            if(words[1] != null){
+                giveDefi(user,words[1])
+             }
+             
+             else{
+                 client.say(channel, "Veuillez indiquer le nombre de golds que vous voulez donner avec !donner <golds>" );
+             }
+         
+            break;
             case "!loto" :
             if(isModerator(user) || isBroadcaster(user) ){
                 if(words[1] != null){
@@ -143,6 +158,101 @@ client.on('connected', function(adress, port) {
     client.action("tiboy590", "Me voilà connecté au chat PogChamp !");
  
 });
+// DEFI ===========================================================================================================
+function showDefi(){
+    var query = "SELECT * FROM defi_m WHERE current = 1"
+    bdd.query(query, function (mysqlError, result, fields) {
+        if (mysqlError) throw mysqlError;
+        console.log(result.id_defi_m > 0 )
+        if(typeof result[0] !== 'undefined' ){
+        send_message = "Defi en cour : " + result[0].name+ ". Objectif : " + result[0].amount + "/" + result[0].price +" golds . Donnez avec !donner <gold>";
+        client.say(channel, send_message);
+        }
+        else{
+            send_message = "Pas de defi pour l'instant BibleThump . Vous pouvez en proposer sur le discord ! PogChamp";
+        client.say(channel, send_message);
+        }
+    });
+
+}
+function giveDefi(user, amount){
+    var query = "SELECT * FROM defi_m WHERE current = 1";
+     
+        bdd.query(query, function (mysqlError, result, fields) {
+            if (mysqlError) throw mysqlError;
+           
+            if(typeof result[0] !== 'undefined' ){
+                var id_defi = result[0].id_defi_m;
+                
+                //check si l'user a assez de golds
+                var query = "SELECT * FROM test WHERE name = '"+ user['display-name'] +"'";
+             
+                bdd.query(query, function (mysqlError, result, fields) {
+                    if (mysqlError) throw mysqlError;
+                        var current_gold = result[0].gold
+                    if(current_gold > amount){
+                        // enleve les golds de l'utilisateur
+                        var new_gold = current_gold - amount;
+                        query = "UPDATE test SET gold = "+ new_gold + " WHERE name = '"+ user['display-name'] + "'";
+                  
+                        bdd.query(query, function (mysqlError, result, fields) {
+                            if (mysqlError) throw mysqlError;
+                            //ajoute les golds au defi
+                            query = "UPDATE defi_m SET amount ="+ amount + "+ amount WHERE  current = TRUE";
+                  
+                            bdd.query(query, function (mysqlError, result, fields) {
+                                if (mysqlError) throw mysqlError; 
+                                
+                                //ajoute le don dans la liste des donations
+                                query = "INSERT INTO donation_defi (name_membre, id_defi_m, amount) VALUES ('"+user["display-name"]+"', '"+id_defi +"',  '"+amount +"')";
+                               console.log(query);
+                                bdd.query(query, function (mysqlError, result, fields) {
+                                    if (mysqlError) throw mysqlError; 
+                                    client.say(channel, user["display-name"] + " donne "+ amount + " au defi ! (!defi)" );
+                                    checkDefiDone();
+                                })
+                            })
+                        })
+                    }
+                    else{
+                        send_message = "Eh oh "+ user["display-name"] +"! T'as pas assez de thune ! (!gold)";
+                        client.say(channel, send_message);
+                    }
+                });
+        }else{
+                send_message = "Pas de defi pour l'instant BibleThump . Vous pouvez en proposer sur le discord ! PogChamp";
+                client.say(channel, send_message);
+            }
+        });
+}
+function checkDefiDone(){
+    //select le defi
+    query = "SELECT * FROM defi_m WHERE current = 1"
+    bdd.query(query, function (mysqlError, result, fields) {
+        if (mysqlError) throw mysqlError;
+        var name_defi = result[0].name;
+        console.log(result[0].price);
+        console.log(result[0].amount);
+            if(result[0].amount >= result[0].price){
+                // le passe en off
+                query = "UPDATE defi_m SET current = 0 WHERE current = 1"
+                bdd.query(query, function (mysqlError, result, fields) {
+                    if (mysqlError) throw mysqlError; 
+                    var i = 0;
+                    var oula = setInterval(function(){
+                        i++
+                        if(i >2){
+                            clearInterval(oula);
+                        }
+                        client.say(channel, "PogChamp " );
+                    }, 500);
+                    send_message = "Le defi \""+ name_defi + "\" viens d'être completé !!!";
+                    client.say(channel, send_message);
+                })
+            }
+    });
+}
+
 // LOTO ---------------------------------------------------------------------------------------------------------
 function isSubscriber(user){
     return user.subscriber;
@@ -226,18 +336,26 @@ function getRandomInt(max) {
 
 
 function getPodium() {
-    var query = "SELECT * FROM test ORDER BY gold DESC";
+    var query = "SELECT name_membre, SUM(amount) as amount FROM donation_defi WHERE id_defi_m = 4 GROUP BY name_membre ORDER BY SUM(amount) DESC";
 
     bdd.query(query, function (mysqlError, result, fields) {
         if (mysqlError) throw mysqlError;
-        send_message = "";
-        for(var i= 0; i < 3; i++)
-        {
-            send_message += " Numero : " + (i+1) + " : " + result[i].name + "(" + result[i].gold + " po )     ";
+        send_message = "Podium des contributions pour le defi :";
+     
+        
+        for(var i= 0; i < 3; i++){
+         
+          if(typeof result[i] !== 'undefined'){  
+              
+              send_message += " Numero : " + (i+1) + " : " + result[i].name_membre + " (" + result[i].amount + " po) PogChamp    "
         }
+        
+        
+        
+        };
         client.say(channel, send_message);
-    });
   
+    })
 }
 
 function checkUserExist(user){
@@ -277,7 +395,7 @@ function addGold(user, gold_amount) {
     //console.log("addGold("+ user["display-name"]+"," + gold_amount +")");
    
     var query = "UPDATE test SET gold = gold +"+gold_amount+" WHERE name = '"+ user["display-name"]+"'";
-    logs(query, false);
+    
     bdd.query(query, function (mysqlError, result, fields) {
         if (mysqlError) throw mysqlError;
      
