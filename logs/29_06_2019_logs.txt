@@ -1,0 +1,45 @@
+[29/06/2019] [12:14] <DeusKiwi> !salut
+[29/06/2019] [12:14] <TheTiBot> Bonjour, messire  DeusKiwi HSCheers 
+[29/06/2019] [12:14] <DeusKiwi> !loto 1 10
+[29/06/2019] [12:14] Loto démaré avec max =1 et win_number = 0
+[29/06/2019] [12:14] <TheTiBot> On lance un loto ! Le nombre à trouver est entre 0 et 1 ! Il y'a 10 golds en jeu !
+[29/06/2019] [12:15] <DeusKiwi> !loto 0 10
+[29/06/2019] [12:15] Loto démaré avec max =0 et win_number = 0
+[29/06/2019] [12:15] <TheTiBot> On lance un loto ! Le nombre à trouver est entre 0 et 0 ! Il y'a 10 golds en jeu !
+[29/06/2019] [12:15] <DeusKiwi> 0
+[29/06/2019] [12:15] <TheTiBot> Jebaited DeusKiwi viens de gagner le Loto ! PogChamp Il gagne donc les 10 pieces d'or !
+[29/06/2019] [12:15] <DeusKiwi> !loto 0 1
+[29/06/2019] [12:15] Loto démaré avec max =0 et win_number = 0
+[29/06/2019] [12:15] <TheTiBot> On lance un loto ! Le nombre à trouver est entre 0 et 0 ! Il y'a 1 golds en jeu !
+[29/06/2019] [12:15] <DeusKiwi> 0
+[29/06/2019] [12:15] <TheTiBot> Jebaited DeusKiwi viens de gagner le Loto ! PogChamp Il gagne donc les 10 pieces d'or !
+[29/06/2019] [12:17] <DeusKiwi> !loto 0 1
+[29/06/2019] [12:17] Loto démaré avec max =0 et win_number = 0
+[29/06/2019] [12:17] <TheTiBot> On lance un loto ! Le nombre à trouver est entre 0 et 0 ! Il y'a 1 golds en jeu !
+[29/06/2019] [12:17] <DeusKiwi> 0
+[29/06/2019] [12:17] <DeusKiwi> 0
+[29/06/2019] [12:17] <DeusKiwi> 1
+[29/06/2019] [12:21] <DeusKiwi> !loto 0 1
+[29/06/2019] [12:21] Loto démaré avec max =0 et win_number = 0
+[29/06/2019] [12:21] <TheTiBot> On lance un loto ! Le nombre à trouver est entre 0 et 0 ! Il y'a 1 golds en jeu !
+[29/06/2019] [12:21] <DeusKiwi> 0
+[29/06/2019] [12:21] <TheTiBot> Jebaited DeusKiwi viens de gagner le Loto ! PogChamp Il gagne donc les 1 pieces d'or !
+[29/06/2019] [12:22] <DeusKiwi> !loto 0 2
+[29/06/2019] [12:22] Loto démaré avec max =0 et win_number = 0
+[29/06/2019] [12:22] <TheTiBot> On lance un loto ! Le nombre à trouver est entre 0 et 0 ! Il y'a 2 golds en jeu !
+[29/06/2019] [12:22] <DeusKiwi> 0
+[29/06/2019] [12:22] <TheTiBot> Jebaited DeusKiwi viens de gagner le Loto ! PogChamp Il gagne donc les 1 pieces d'or !
+[29/06/2019] [12:30] <DeusKiwi> !loto 0 1
+[29/06/2019] [12:30] Loto démaré avec max =0 et win_number = 0
+[29/06/2019] [12:30] <TheTiBot> On lance un loto ! Le nombre à trouver est entre 0 et 0 ! Il y'a 1 golds en jeu !
+[29/06/2019] [12:30] <DeusKiwi> 0
+[29/06/2019] [12:32] <DeusKiwi> !loto 0 1
+[29/06/2019] [12:32] Loto démaré avec max =0 et win_number = 0
+[29/06/2019] [12:32] <TheTiBot> On lance un loto ! Le nombre à trouver est entre 0 et 0 ! Il y'a 1 golds en jeu !
+[29/06/2019] [12:32] <DeusKiwi> 0
+[29/06/2019] [12:32] <TheTiBot> Jebaited DeusKiwi viens de gagner le Loto ! PogChamp Il gagne donc les 1 pieces d'or !
+[29/06/2019] [12:32] <DeusKiwi> !loto 0 2
+[29/06/2019] [12:32] Loto démaré avec max =0 et win_number = 0
+[29/06/2019] [12:32] <TheTiBot> On lance un loto ! Le nombre à trouver est entre 0 et 0 ! Il y'a 2 golds en jeu !
+[29/06/2019] [12:32] <DeusKiwi> 0
+[29/06/2019] [12:32] <TheTiBot> Jebaited DeusKiwi viens de gagner le Loto ! PogChamp Il gagne donc les 1 pieces d'or !

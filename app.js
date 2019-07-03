@@ -1,4 +1,7 @@
 var tmi = require('tmi.js');
+const notifier = require('node-notifier');
+const path = require('path');
+
 
 var options = {
     options: {
@@ -36,20 +39,28 @@ bdd.connect(function(mysqlError) {
 client.connect();
 client.on('chat', function(channel, user, message, self){
     logs("<"+ user["display-name"] + "> " + message, true)
+    let kiwi = message.indexOf('kiwi');
+  
+    if(kiwi >= 0){
+            logsKiwi("<"+ user["display-name"] + "> " +message, true)
+    }
 //Ajoute des golds
 if(self == false){
-    
+
     //verifie si l'utilisateur existe, si non en créé un
     if(checkUserExist(user) == false){
         
     }else{
-        
+        if(user.badges == null){
+            user.badges = { viewer: '1' }
+        }
     //ajoute des golds à l'utilisateur en bdd
-    addGold(user, 1);
+ 
 
 
     var words = message.split(' ');
     switch(words[0]){
+
             case "!salut" :
             if(isBroadcaster(user)){
                 client.say(channel, "Vous voilà de retour, maître " + user['display-name']);
@@ -57,7 +68,7 @@ if(self == false){
             
             else{
                 if(isSubscriber(user)){
-                    client.say(channel, "Bonjour, messire  " + user['display-name']);
+                    client.say(channel, "Bonjour, messire  " + user['display-name'] +" HSCheers ");
                     }
                 else{
                     client.say(channel, "Bonjour à toi " + user['display-name']);}
@@ -71,6 +82,23 @@ if(self == false){
             break;
             case "!gold" :
             getMyGold(user);
+            break;
+            case "!give" :
+            if(isBroadcaster(user) || isModerator(user)){
+              if(words[1] &&  words[2]){
+                words[1] = words[1].replace('@','')
+                  addGold(words[1], words[2])
+                  client.say(channel, words[1]+" obtiens "+words[2]+ " golds PogChamp");
+              }
+              else{
+                client.say(channel, user['display-name']+" essaie plutot avec !give DeusKiwi 200 HSCheers");
+              }
+            }
+            
+            else{
+               
+                    client.say(channel, "Hop hop hop, seul les modos tout puissants peuvent donner des golds");
+            }
             break;
             case "!discord" :
             client.say(channel, "Rejoignez la team Tiboy sur discord ! Giveway gratuis toute les semaines, concour et un max de conneries LUL https://discord.gg/w2yKvkn ");
@@ -155,9 +183,15 @@ if(self == false){
 });
 client.on('connected', function(adress, port) {
     //console.log("Adress: " + adress + " Port: " + port);
-    client.action("tiboy590", "Me voilà connecté au chat PogChamp !");
+    client.action("tiboy590", "Plop Plip");
  
 });
+// NOTIFICATION ======================================================================================
+
+
+
+
+
 // DEFI ===========================================================================================================
 function showDefi(){
     var query = "SELECT * FROM defi_m WHERE current = 1"
@@ -176,6 +210,7 @@ function showDefi(){
 
 }
 function giveDefi(user, amount){
+    
     var query = "SELECT * FROM defi_m WHERE current = 1";
      
         bdd.query(query, function (mysqlError, result, fields) {
@@ -208,7 +243,7 @@ function giveDefi(user, amount){
                                console.log(query);
                                 bdd.query(query, function (mysqlError, result, fields) {
                                     if (mysqlError) throw mysqlError; 
-                                    client.say(channel, user["display-name"] + " donne "+ amount + " au defi ! (!defi)" );
+                                    client.say(channel,"HSCheers " +  user["display-name"] + " donne "+ amount + " pieces d'or au defi ! (!defi)" );
                                     checkDefiDone();
                                 })
                             })
@@ -269,6 +304,8 @@ function isBroadcaster(user){
 }
 
 function startLoto(max, gold){
+    var amount_given = gold;
+    
     lotoStarted = true;
     win_number =  getRandomInt(max);
     min = 0;
@@ -287,28 +324,34 @@ function startLoto(max, gold){
         logs("Nouvelle fourchette : min ="+min + "  max =" + max)
         client.say("tiboy590", "Le chiffre à trouver est entre " + min + " et " + max);}
     }, 60000);
-   
+  
     var subOnly = true;
     var ms = 60000;
     var subOnlyOFfTimer = setTimeout(function(){
         if(lotoStarted){
         subOnly = false;
         logs(" Fin du sub only loto apres" + ms/1000 + "secondes")
-        client.say(channel, "PogChamp " +" Le loto est reservé aux sub durant les "+ ms/1000 +" premieres secondes!" );}
+        client.say(channel, "PogChamp " +" Les "+ms/1000+ " sont passées ! Tout le monde peut participer !" );}
     }, ms);
-
+   
     client.on('chat', function(channel, user, message, self){
         if( subOnly != false & isSubscriber(user)== false & self == false & lotoStarted == true){
             
             client.say(channel, "NotLikeThis " + user['display-name'] + " Le loto est reservé aux sub durant les "+ ms/1000 +" premieres secondes!" );
         }else if(lotoStarted == true){
+     
+            console.log("gold 1 : "+gold)
+         
             if(parseInt(message) == win_number){
                 var chat = "Jebaited " + user['display-name'] + " viens de gagner le Loto ! PogChamp " ;
-                
-                if( gold > 0){
-                    console.log("golds : "+gold)
-                    chat = chat +"Il gagne donc les "+ gold + " pieces d'or !" ;
-                    addGold(user,gold);
+                console.log("gold 2 : "+gold)
+                if( amount_given > 0){
+                   
+                    chat = chat +"Il gagne donc les "+ amount_given + " pieces d'or !" ;
+                    addGold(user['display-name'],gold);
+                    lotoStarted = false;
+                   
+                    
                 }
                 client.say(channel, chat);
                 clearInterval(reduce);
@@ -327,7 +370,36 @@ function startLoto(max, gold){
 
 
 }
+function loto_2(max, gold){
+    lotoStarted = true;
+    win_number =  getRandomInt(max);
+    min = 0;
+    var time_subonly = 60000;
+    var subOnly = true;
+    logs("Loto démaré avec max ="+max + " et win_number = "+ win_number)
+    var reduce = setInterval(function(){
+        if(lotoStarted){
+        var med = Math.round(((max-min) /2)+min);
+        
+        if(min <= win_number & win_number < med){
+            max = med;
+            
+        }else{
+            min = med;
+            
+        }
+        logs("Nouvelle fourchette : min ="+min + "  max =" + max)
+        client.say("tiboy590", "Le chiffre à trouver est entre " + min + " et " + max);}
+    }, 60000);
 
+    var subOnlyOFfTimer = setTimeout(function(){
+        if(lotoStarted){
+        subOnly = false;
+        logs(" Fin du sub only loto apres" + time_subonly/1000 + "secondes")
+        client.say(channel, "PogChamp " +" Les "+time_subonly/1000+ " sont passées ! Tout le monde peut participer !" );}
+    }, time_subonly);
+
+}
 function getRandomInt(max) {
     return Math.floor(Math.random() * Math.floor(max));
   }
@@ -391,10 +463,10 @@ function newUser(user) {
     });
 }
 // GOLD methods --------------------------------------------------------------------------------------------------------------------------------------------------
-function addGold(user, gold_amount) {
+function addGold(username, gold_amount) {
     //console.log("addGold("+ user["display-name"]+"," + gold_amount +")");
    
-    var query = "UPDATE test SET gold = gold +"+gold_amount+" WHERE name = '"+ user["display-name"]+"'";
+    var query = "UPDATE test SET gold = gold +"+gold_amount+" WHERE name = '"+ username+"'";
     
     bdd.query(query, function (mysqlError, result, fields) {
         if (mysqlError) throw mysqlError;
@@ -421,33 +493,45 @@ function getMyGold(user){
 const fs = require('fs');
 var os = require("os");
 
+var now = new Date();
+var annee   = now.getFullYear();
+var mois    = now.getMonth() + 1;
+if (mois < 10){
+    mois = "0" + mois;
+}
+var jour    = now.getDate();
+var heure   = now.getHours();
+if (heure < 10){
+    heure = "0" + heure;
+}
+var minute  = now.getMinutes();
+
+if (minute < 10){
+    minute = "0" + minute;
+}
+var seconde = now.getSeconds();
+if (seconde < 10){
+    seconde = "0" + seconde;
+}
 
 function logs(string, chat){
-    var now = new Date();
-    var annee   = now.getFullYear();
-    var mois    = now.getMonth() + 1;
-    if (mois < 10){
-        mois = "0" + mois;
-    }
-    var jour    = now.getDate();
-    var heure   = now.getHours();
-    if (heure < 10){
-        heure = "0" + heure;
-    }
-    var minute  = now.getMinutes();
-
-    if (minute < 10){
-        minute = "0" + minute;
-    }
-    var seconde = now.getSeconds();
-    if (seconde < 10){
-        seconde = "0" + seconde;
-    }
     if(chat == false){
         string ="###"+ string;
     }
+    var name_txt = "./logs/"+jour+"_"+mois+"_"+annee+"_logs.txt";
     var text = "[" + +jour+"/"+mois+"/"+annee+"] [" + heure +":" + minute +"] "+string ;
-    fs.appendFile("logs.txt", text +os.EOL, function (err) {
+    fs.appendFile(name_txt, text +os.EOL, function (err) {
+        if (err) throw err;
+        
+    })
+}
+function logsKiwi(string, chat){
+    if(chat == false){
+        string ="###"+ string;
+    }
+    var name_txt = "kiwi_logs.txt";
+    var text = "[" + +jour+"/"+mois+"/"+annee+"] [" + heure +":" + minute +"] "+string ;
+    fs.appendFile(name_txt, text +os.EOL, function (err) {
         if (err) throw err;
         
     })
