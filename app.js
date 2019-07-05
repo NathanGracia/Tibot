@@ -55,7 +55,7 @@ if(self == false){
             user.badges = { viewer: '1' }
         }
     //ajoute des golds à l'utilisateur en bdd
- 
+    addGold(user['display-name'],1);
 
 
     var words = message.split(' ');
@@ -131,16 +131,17 @@ if(self == false){
             case "!loto" :
             if(isModerator(user) || isBroadcaster(user) ){
                 if(words[1] != null){
+                   
                    var chat ="On lance un loto ! Le nombre à trouver est entre 0 et " + words[1] + " !";
                    var gold = 0;
                     if(words[2]  > 0){
                         gold = words[2];
-                        console.log(words[2] + " ===" + gold)
                         
-                        chat = chat + " Il y'a "+ words[2] + " golds en jeu !";
+                        
+                        chat = chat + " Il y'a "+ gold + " golds en jeu !";
                         
                     }
-                startLoto(parseInt(words[1]),gold);
+                startLoto(parseInt(words[1]),parseInt(gold));
                     client.say(channel, chat );
                 }
                 
@@ -304,6 +305,7 @@ function isBroadcaster(user){
 }
 
 function startLoto(max, gold){
+    console.log('tac')
     var amount_given = gold;
     
     lotoStarted = true;
@@ -335,12 +337,15 @@ function startLoto(max, gold){
     }, ms);
    
     client.on('chat', function(channel, user, message, self){
+        if(lotoStarted == false){
+            return;
+        }
         if( subOnly != false & isSubscriber(user)== false & self == false & lotoStarted == true){
             
             client.say(channel, "NotLikeThis " + user['display-name'] + " Le loto est reservé aux sub durant les "+ ms/1000 +" premieres secondes!" );
-        }else if(lotoStarted == true){
-     
-            console.log("gold 1 : "+gold)
+        }else if(lotoStarted == true & self == false){
+                     console.log("message : "+message)
+                   console.log("gold 1 : "+gold)
          
             if(parseInt(message) == win_number){
                 var chat = "Jebaited " + user['display-name'] + " viens de gagner le Loto ! PogChamp " ;
