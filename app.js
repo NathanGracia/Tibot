@@ -1,7 +1,7 @@
 var tmi = require('tmi.js');
 const notifier = require('node-notifier');
 const path = require('path');
-
+auto_message();
 
 var options = {
     options: {
@@ -187,10 +187,38 @@ client.on('connected', function(adress, port) {
     client.action("tiboy590", "Plop Plip");
  
 });
-// NOTIFICATION ======================================================================================
-
-
-
+// MESSAGES AUTO ======================================================================================
+function auto_message(){
+    var i = 0
+    var message =""
+    var auto_interval = setInterval(function(){
+        switch(i){
+            case 0 :
+            message = "Rejoignez nous sur facebook ! https://www.facebook.com/Tiboy59-1471643269754828/ "
+            break;
+            case 1 :
+            message = "Rejoignez la team Tiboy sur discord ! Giveway gratuis toute les semaines, concour et un max de conneries LUL https://discord.gg/w2yKvkn "
+            break;
+            case 2 :
+            message = "Viens suivre mes actualitées sur Twitter ! :https://twitter.com/Tiboy590 "
+            break;
+            case 3 :
+            message = "Vous pouvez proposez des musiques avec !sr <NomDeLaMusique> WAW C EST INSANE"
+            break;
+            case 4 :
+            message = "Le gdoc des commandes : https://docs.google.com/spreadsheets/d/1TRqgZuwRRTFEg046odDFFmfWT_f4vB3nw9P19-Gv0pw/edit?usp=sharing "
+            break;
+            case 5 :
+            message = "Vous pouvez donner vos golds (!gold) au defi en cour ! (!defi)"
+            break;
+            case 6 :
+            i = -1;
+            break;
+        }
+        client.say(channel, message);
+        i++;
+    }, 350000);
+}
 
 
 // DEFI ===========================================================================================================
@@ -305,15 +333,19 @@ function isBroadcaster(user){
 }
 
 function startLoto(max, gold){
-    console.log('tac')
     var amount_given = gold;
-    
-    lotoStarted = true;
-    win_number =  getRandomInt(max);
-    min = 0;
+    var win_number =  getRandomInt(max);
+    var min = 0;
+    var subOnly = true;
+    var ms = 60000;
+    var loto_on = true;
+
+
     logs("Loto démaré avec max ="+max + " et win_number = "+ win_number)
+
+    //reduce choice
     var reduce = setInterval(function(){
-        if(lotoStarted){
+       
         var med = Math.round(((max-min) /2)+min);
         
         if(min <= win_number & win_number < med){
@@ -324,57 +356,61 @@ function startLoto(max, gold){
             
         }
         logs("Nouvelle fourchette : min ="+min + "  max =" + max)
-        client.say("tiboy590", "Le chiffre à trouver est entre " + min + " et " + max);}
+        client.say("tiboy590", "Le chiffre à trouver est entre " + min + " et " + max);
     }, 60000);
-  
-    var subOnly = true;
-    var ms = 60000;
+    
+
+    //subonly clock
     var subOnlyOFfTimer = setTimeout(function(){
-        if(lotoStarted){
+   
         subOnly = false;
         logs(" Fin du sub only loto apres" + ms/1000 + "secondes")
-        client.say(channel, "PogChamp " +" Les "+ms/1000+ " sont passées ! Tout le monde peut participer !" );}
+        client.say(channel, "PogChamp " +" Les "+ms/1000+ " sont passées ! Tout le monde peut participer !" );
     }, ms);
    
+
+
+
+//check messge
     client.on('chat', function(channel, user, message, self){
-        if(lotoStarted == false){
-            return;
-        }
-        if( subOnly != false & isSubscriber(user)== false & self == false & lotoStarted == true){
+       if(loto_on == false){
+           return;
+       }
+        if( subOnly != false & isSubscriber(user)== false & self == false ){
             
             client.say(channel, "NotLikeThis " + user['display-name'] + " Le loto est reservé aux sub durant les "+ ms/1000 +" premieres secondes!" );
-        }else if(lotoStarted == true & self == false){
-                     console.log("message : "+message)
-                   console.log("gold 1 : "+gold)
+
+        }else if(self == false){
+     
+          
          
             if(parseInt(message) == win_number){
+
                 var chat = "Jebaited " + user['display-name'] + " viens de gagner le Loto ! PogChamp " ;
-                console.log("gold 2 : "+gold)
+              
                 if( amount_given > 0){
                    
                     chat = chat +"Il gagne donc les "+ amount_given + " pieces d'or !" ;
                     addGold(user['display-name'],gold);
-                    lotoStarted = false;
-                   
+           
                     
                 }
+
                 client.say(channel, chat);
                 clearInterval(reduce);
-                lotoStarted = false;
+                clearTimeout(subOnlyOFfTimer);
+                loto_on = false
                 return;
+             
             }
-            if(message == "!c'estquoilareponse"){
-                client.say(channel, "Le chiffre gagnant du loto est : " + win_number);
-            }
-            return;
+       
 
-        }else{
-            return;
-        }return;
+        }
     })
-
-
 }
+
+
+
 function loto_2(max, gold){
     lotoStarted = true;
     win_number =  getRandomInt(max);
